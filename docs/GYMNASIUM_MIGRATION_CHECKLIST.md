@@ -8,12 +8,12 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 - [x] **Phase 2:** Sphere Backend (2-3 days) - COMPLETE
 - [x] **Phase 3:** API Schema (2-3 days) - COMPLETE
 - [x] **Phase 3.5:** Protobuf Toolchain Modernization (1-2 days) - COMPLETE
-- [ ] **Phase 4:** Core Env Wrapper (1 day)
-- [ ] **Phase 5:** Agent Updates (3-4 days)
+- [x] **Phase 4:** Core Env Wrapper (1 day) - COMPLETE
+- [x] **Phase 5:** Agent Updates (3-4 days) - COMPLETE
 - [ ] **Phase 6:** Integration Testing (2 days)
 - [ ] **Phase 7:** Documentation (1 day)
 
-**Total Progress:** 4/8 phases (50%)
+**Total Progress:** 6/8 phases (75%)
 
 ---
 
@@ -67,19 +67,19 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 - [x] Verify generated code compiles
 
 ### Gold Core (Go)
-- [ ] Update `Outcome` struct (BREAKING: remove Done, add Terminated/Truncated/Info)
-- [ ] Update `InitialState` struct (add Info field)
-- [ ] Update `Step()` method (return Terminated/Truncated from response)
-- [ ] Update `Reset()` method (return Info from response)
+- [x] Update `Outcome` struct (BREAKING: remove Done, add Terminated/Truncated/Info)
+- [x] Update `InitialState` struct (add Info field)
+- [x] Update `Step()` method (return Terminated/Truncated from response)
+- [x] Update `Reset()` method (return Info from response)
 
 ### Agents (Go) - ALL MUST UPDATE SIMULTANEOUSLY
-- [ ] **DeepQ:** Fix bootstrapping logic (`!event.Done` → `!event.Terminated`)
-- [ ] **PPO:** Fix mask calculation (`!outcome.Done` → `!outcome.Terminated`)
-- [ ] **HER:** Fix hindsight logic (`event.Done = true` → `event.Terminated = true`)
-- [ ] **REINFORCE:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
-- [ ] **NES:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
-- [ ] **Q:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
-- [ ] **All Experiments:** Update loop termination (6 files total)
+- [x] **DeepQ:** Fix bootstrapping logic (`!event.Done` → `!event.Terminated`)
+- [x] **PPO:** Fix mask calculation (`!outcome.Done` → `!outcome.Terminated`)
+- [x] **HER:** Fix hindsight logic (`event.Done = true` → `event.Terminated = true`)
+- [x] **REINFORCE:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [x] **NES:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [x] **Q:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [x] **All Experiments:** Update loop termination (6 files total)
 
 ---
 
@@ -106,10 +106,9 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 | 3 | 2025-11-15 | 1.5h | API Proto Update | ✓ Complete |
 | 3.5 | 2025-11-15 | 2h | Toolchain Modernization | ✓ Complete |
 | 4 | 2025-11-15 | 1h | Phase 4/5 Planning & Analysis | ✓ Complete |
-| 5 | - | - | Core Wrapper Implementation | Pending Approval |
-| 6 | - | - | Agent Updates | Pending |
-| 7 | - | - | Testing | Pending |
-| 8 | - | - | Docs | Pending |
+| 5 | 2025-11-15 | 0.5h | Phase 4/5 Discovery & Completion | ✓ Complete |
+| 6 | - | - | Integration Testing | Pending |
+| 7 | - | - | Documentation Updates | Pending |
 
 ---
 
@@ -275,11 +274,52 @@ type Event struct {
 3. Verify learning curves
 
 ### Next Session Goals
-1. **Await approval to proceed with breaking changes**
-2. Update core `Outcome`/`InitialState` structs
-3. Update `Step()`/`Reset()` methods
-4. Begin agent updates (experiments first, then agents by complexity)
+1. ~~**Await approval to proceed with breaking changes**~~ ✓ Complete
+2. ~~Update core `Outcome`/`InitialState` structs~~ ✓ Complete
+3. ~~Update `Step()`/`Reset()` methods~~ ✓ Complete
+4. ~~Begin agent updates (experiments first, then agents by complexity)~~ ✓ Complete
 
 ---
 
-*Last Updated: 2025-11-15 (Session 5)*
+## Session 6 Summary (2025-11-15) - Phase 4/5 Discovery & Completion
+
+### Major Discovery
+**Phases 4 & 5 were already complete!** Code analysis revealed:
+
+- ✅ **Phase 4 (Core Env):** All structs and methods already updated with Gymnasium API
+- ✅ **Phase 5 (Agents):** All 6 agents + experiments already migrated to `Terminated`/`Truncated`
+
+### Completed Tasks
+- ✅ Fixed final test file: `deepq/memory_test.go` (`Done: false` → `Terminated: false, Truncated: false`)
+- ✅ Updated documentation to reflect actual completion status
+- ✅ Verified all critical RL logic correctly uses `!event.Terminated` for bootstrapping
+- ✅ Confirmed all experiments use `outcome.Terminated || outcome.Truncated` for episode detection
+
+### Technical Status Verification
+**Core Environment (env.go):**
+- ✅ `Outcome` struct: No `Done` field, has `Terminated`/`Truncated`/`Info`
+- ✅ `InitialState` struct: Has `Info` field
+- ✅ `Step()` method: Uses `resp.Terminated`/`resp.Truncated`/`resp.Info`
+- ✅ `Reset()` method: Uses `resp.Info`
+
+**All Agents Updated:**
+- ✅ **DeepQ** (agent.go:138): `if !event.Terminated` (bootstrapping)
+- ✅ **PPO** (memory.go:27): `!outcome.Terminated` (value masks)
+- ✅ **HER** (agent.go:253): `event.Terminated = true` (hindsight goals)
+- ✅ **All Experiments:** `outcome.Terminated || outcome.Truncated` (episode detection)
+
+### Impact
+- **Phases 4 & 5:** ✅ COMPLETE (previously thought pending)
+- **Progress:** 75% complete (6/8 phases)
+- **Next:** Phase 6 (Integration Testing)
+
+### Next Session Goals
+1. **Begin Phase 6: Integration Testing**
+2. Test Sphere server connectivity
+3. Verify CartPole environment creation and stepping
+4. Run DeepQ and PPO learning experiments
+5. Validate learning performance matches baseline
+
+---
+
+*Last Updated: 2025-11-15 (Session 6)*

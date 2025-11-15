@@ -14,7 +14,7 @@ func TestMemory(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		s := tensor.New(tensor.WithShape(1, 4), tensor.WithBacking([]int{i, i + 1, i + 2, i + 3}))
-		ev := NewEvent(s, 0, &envv1.Outcome{Observation: s, Action: i, Reward: 1.0, Done: false})
+		ev := NewEvent(s, 0, &envv1.Outcome{Observation: s, Action: i, Reward: 1.0, Terminated: false, Truncated: false})
 		mem.PushFront(ev)
 	}
 
