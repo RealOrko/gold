@@ -6,14 +6,14 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 
 - [x] **Phase 1:** Research & Planning (1 day) - COMPLETE
 - [x] **Phase 2:** Sphere Backend (2-3 days) - COMPLETE
-- [~] **Phase 3:** API Schema (2-3 days) - IN PROGRESS (Proto updated, bindings blocked)
-- [ ] **Phase 3.5:** Protobuf Toolchain Modernization (1-2 days) - NEW
+- [x] **Phase 3:** API Schema (2-3 days) - COMPLETE
+- [x] **Phase 3.5:** Protobuf Toolchain Modernization (1-2 days) - COMPLETE
 - [ ] **Phase 4:** Core Env Wrapper (1 day)
 - [ ] **Phase 5:** Agent Updates (3-4 days)
 - [ ] **Phase 6:** Integration Testing (2 days)
 - [ ] **Phase 7:** Documentation (1 day)
 
-**Total Progress:** 2.5/8 phases (31%)
+**Total Progress:** 4/8 phases (50%)
 
 ---
 
@@ -53,18 +53,18 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 - [x] Add `terminated` field to `StepEnvResponse`
 - [x] Add `truncated` field to `StepEnvResponse`
 - [x] Add `info` field to `ResetEnvResponse`
-- [~] Run `make generate` (blocked - see Phase 3.5)
-- [ ] Update Gold vendor
+- [x] Run `make generate`
+- [x] Update Gold vendor
 
 ### Protobuf Toolchain (Phase 3.5)
-- [ ] Fix Dockerfile.gen base image (Debian Buster → Bullseye)
-- [ ] Update Python 2 → Python 3 in toolchain
-- [ ] Fix protoc-gen-go compatibility issues
-- [ ] Update go_package option format
-- [ ] Add googleapis proto dependencies
-- [ ] Regenerate Go bindings successfully
-- [ ] Regenerate Python bindings successfully
-- [ ] Verify generated code compiles
+- [x] Fix Dockerfile.gen base image (Debian Buster → Bullseye)
+- [x] Update Python 2 → Python 3 in toolchain
+- [x] Fix protoc-gen-go compatibility issues
+- [x] Update go_package option format
+- [x] Add googleapis proto dependencies
+- [x] Regenerate Go bindings successfully
+- [x] Regenerate Python bindings successfully
+- [x] Verify generated code compiles
 
 ### Gold Core (Go)
 - [ ] Update `Outcome` struct
@@ -102,8 +102,8 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 |---------|------|----------|-------|--------|
 | 1 | 2025-11-15 | 1h | Research & Planning | ✓ Complete |
 | 2 | 2025-11-15 | 2h | Sphere Backend | ✓ Complete |
-| 3 | 2025-11-15 | 1.5h | API Proto Update | ~ Partial (proto updated, bindings blocked) |
-| 3.5 | - | - | Toolchain Fix | Pending |
+| 3 | 2025-11-15 | 1.5h | API Proto Update | ✓ Complete |
+| 3.5 | 2025-11-15 | 2h | Toolchain Modernization | ✓ Complete |
 | 4 | - | - | Core Wrapper | Pending |
 | 5-7 | - | - | Agents | Pending |
 | 8 | - | - | Testing | Pending |
@@ -120,21 +120,15 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 | Sphere Repo Strategy | ✓ Complete | Forked to RealOrko/sphere, branch: gymnasium-migration |
 | Gymnasium Version | ✓ Complete | 0.28.1 (Python 3.7 compatible) |
 | Backward Compatibility | ✓ Complete | Combined terminated\|truncated into done (Python) |
-| Proto Bindings Strategy | Pending | Manual update vs toolchain fix (Phase 3.5) |
-| Toolchain Modernization | ✓ Complete | Golang 1.19, Debian Bullseye, Python 3 |
+| Proto Bindings Strategy | ✓ Complete | Toolchain fix successful (Phase 3.5) |
+| Toolchain Modernization | ✓ Complete | Golang 1.19, Debian Bullseye, Python 3, grpc-gateway v1.16 |
 
 ---
 
 ## Blockers
 
 ### Active Blockers
-- **Phase 3:** Protobuf generation toolchain broken
-  - Old Dockerfile.gen uses deprecated Debian Buster (404 errors)
-  - Python 2 no longer available in package repos
-  - protoc-gen-go version incompatible with `go_package = "spherev1alpha"` format
-  - Missing googleapis proto dependencies for google/api/annotations.proto
-  - **Impact:** Cannot regenerate bindings; manual updates or toolchain fix required
-  - **Workaround:** Proto source updated (committed); bindings pending Phase 3.5
+- None - Phase 3.5 successfully resolved all toolchain blockers!
 
 ---
 
@@ -143,10 +137,10 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 1. ~~Fork Sphere repository~~ ✓ Complete
 2. ~~Update Python dependencies~~ ✓ Complete  
 3. ~~Begin server.py modifications~~ ✓ Complete
-4. ~~Update API protobuf schema~~ ✓ Complete (source)
-5. **Fix protobuf toolchain** (Phase 3.5) - NEXT
-6. Regenerate Go/Python bindings
-7. Update Gold core env wrapper
+4. ~~Update API protobuf schema~~ ✓ Complete
+5. ~~Fix protobuf toolchain~~ ✓ Complete (Phase 3.5)
+6. ~~Regenerate Go/Python bindings~~ ✓ Complete
+7. **Update Gold core env wrapper** - NEXT (Phase 4)
 
 ---
 
@@ -170,6 +164,38 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 - Phase 3.5 added for toolchain modernization
 - Proto source is updated and committed (source of truth)
 - Bindings regeneration deferred to Phase 3.5
+
+---
+
+## Session 4 Summary (2025-11-15) - Phase 3.5
+
+### Completed
+- ✅ Fixed Dockerfile.gen with modern toolchain:
+  - Golang 1.19 on Debian Bullseye
+  - Python 3 with pip3
+  - grpc-gateway v1.16.0 (go install with proper modules)
+  - googleapis cloned for proto dependencies
+- ✅ Updated `go_package` options in proto files for protoc-gen-go v1.5.2 compatibility
+- ✅ Updated prototool.yaml to use /googleapis path
+- ✅ Regenerated Go bindings with terminated/truncated fields
+- ✅ Regenerated Python bindings with gymnasium fields
+- ✅ Updated Gold vendor with new sphere bindings
+- ✅ Verified Gold compiles successfully with new bindings
+- ✅ Improved Makefile with automated generation workflow
+
+### Key Technical Details
+- Used `go install` with version tags instead of deprecated `go get`
+- Added `paths=source_relative` flag to control output directory structure
+- Cloned googleapis directly instead of relying on grpc-gateway's third_party copy
+- Handled Docker container permission issues with sudo chown
+
+### Phase 3.5 Results
+- **Status:** ✅ COMPLETE
+- **Duration:** 2 hours
+- **Impact:** Unblocked Phase 3, modernized toolchain for future maintainability
+- **Commits:** 
+  - sphere: b308488 "Phase 3.5: Modernize protobuf toolchain"
+  - gold: 19dbcce "Update sphere API bindings with gymnasium fields"
 
 ---
 
