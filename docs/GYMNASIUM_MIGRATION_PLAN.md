@@ -3,8 +3,10 @@
 **Project:** Gold RL Library
 **Current Status:** Using OpenAI Gym via Sphere backend
 **Target:** Upgrade to Gymnasium (v1.0.0+)
-**Estimated Effort:** 12-17 days
+**Estimated Effort:** 14-19 days (revised with Phase 3.5)
 **Last Updated:** 2025-11-15
+
+**Current Progress:** Phase 3 (partial) - Proto updated, toolchain blocked
 
 ---
 
@@ -12,11 +14,13 @@
 
 This document outlines the complete migration path from OpenAI Gym to Gymnasium for the Gold reinforcement learning library. The migration touches three distinct layers:
 
-1. **Sphere Backend** (Python) - The environment server
-2. **Sphere API** (Protocol Buffers) - The gRPC interface 
-3. **Gold Library** (Go) - The RL agent implementations
+1. **Sphere Backend** (Python) - The environment server ✅ COMPLETE
+2. **Sphere API** (Protocol Buffers) - The gRPC interface ~ PARTIAL (proto updated, bindings blocked)
+3. **Gold Library** (Go) - The RL agent implementations ⏳ PENDING
 
 The most critical change is the **step API modification** from a single `done` boolean to separate `terminated` and `truncated` booleans, which is essential for correct reinforcement learning algorithm implementations.
+
+**Key Discovery (Phase 3):** The sphere protobuf toolchain is severely outdated, requiring a new Phase 3.5 for modernization before bindings can be regenerated. This adds 1-2 days to the timeline but is essential for maintainability.
 
 ---
 
@@ -459,6 +463,20 @@ if outcome.Terminated {
 
 ## Migration Phases
 
+**Timeline Overview:**
+- Phase 1: Research & Planning (1 day) ✅ COMPLETE
+- Phase 2: Sphere Backend (2-3 days) ✅ COMPLETE  
+- Phase 3: API Schema (2-3 days) ~ PARTIAL
+- **Phase 3.5: Toolchain Modernization (1-2 days) 🆕 NEXT**
+- Phase 4: Core Env Wrapper (1 day)
+- Phase 5: Agent Updates (3-4 days)
+- Phase 6: Integration Testing (2 days)
+- Phase 7: Documentation (1 day)
+
+**Total Estimated Time:** 14-19 days
+
+---
+
 ### Phase 1: Research & Planning ✓
 **Duration:** 1 day
 **Status:** COMPLETE
@@ -470,8 +488,9 @@ if outcome.Terminated {
 
 ---
 
-### Phase 2: Sphere Backend Update
+### Phase 2: Sphere Backend Update ✓
 **Duration:** 2-3 days
+**Status:** COMPLETE
 **Prerequisites:** None
 
 **Tasks:**
@@ -502,34 +521,140 @@ python test/cartpole/gym_solver.py
 ### Phase 3: API Schema Update
 **Duration:** 2-3 days
 **Prerequisites:** Phase 2 complete
+**Status:** PARTIAL - Proto updated, bindings blocked by toolchain issues
 
 **Tasks:**
-1. Update `env.proto` schema
-2. Regenerate Go bindings
-3. Regenerate Python bindings
-4. Update API documentation
-5. Consider versioning strategy
-6. Test protobuf compilation
+1. ✅ Update `env.proto` schema
+2. ✅ Update `StepEnvResponse` with terminated/truncated fields
+3. ✅ Update `ResetEnvResponse` with info field
+4. ✅ Update Dockerfile.gen base image
+5. ⚠️ Regenerate Go bindings (BLOCKED - see Phase 3.5)
+6. ⚠️ Regenerate Python bindings (BLOCKED - see Phase 3.5)
+7. ⚠️ Update API documentation (DEFERRED)
+8. ✅ Versioning strategy decision (keep v1alpha, breaking change)
 
 **Deliverables:**
-- [ ] Updated proto files
-- [ ] Regenerated bindings in all languages
+- [x] Updated proto files (committed to sphere repo)
+- [~] Regenerated bindings in all languages (BLOCKED)
 - [ ] Updated API docs
 
-**Commands:**
+**Completed:**
 ```bash
 cd sphere/
-make generate
-# Verify generated files
-ls api/gen/go/v1alpha/
-ls api/gen/python/v1alpha/
+# Proto changes committed:
+git log --oneline -1
+# 7414425 Phase 3: Update proto schema for Gymnasium API
+
+# Proto diff shows:
+# - StepEnvResponse: done → terminated + truncated
+# - ResetEnvResponse: added info field
+# - Dockerfile.gen: Buster → Bullseye, Python 2 → 3
 ```
+
+**Blocked Issue:**
+Protobuf toolchain has multiple incompatibilities requiring Phase 3.5.
+
+---
+
+### Phase 3.5: Protobuf Toolchain Modernization (NEW)
+**Duration:** 1-2 days
+**Prerequisites:** Phase 3 proto changes complete
+**Status:** NOT STARTED
+
+**Problem Statement:**
+The sphere repository's protobuf generation toolchain is outdated and broken:
+- Dockerfile.gen uses Debian Buster (archived, 404 errors)
+- Python 2 packages no longer available
+- protoc-gen-go v1.5+ incompatible with `go_package = "spherev1alpha"` format
+- Missing googleapis proto dependencies (google/api/annotations.proto)
+- `make generate` command fails completely
+
+**Tasks:**
+1. Fix Dockerfile.gen dependencies
+   - ✅ Update base image to Debian Bullseye
+   - ✅ Replace Python 2 with Python 3
+   - [ ] Test Docker build completes successfully
+2. Fix protoc Go plugin compatibility
+   - [ ] Update go_package format in env.proto and sphere.proto
+   - [ ] OR use --go_opt=M mappings to override package paths
+   - [ ] Determine correct output directory structure
+3. Add googleapis dependencies
+   - [ ] Clone googleapis repo or add as submodule
+   - [ ] Update protoc --proto_path to include googleapis
+4. Update Makefile generate target
+   - [ ] Fix protoc command for Go generation
+   - [ ] Fix protoc command for Python generation
+   - [ ] Add verification steps
+5. Test full regeneration
+   - [ ] Verify Go bindings compile in sphere
+   - [ ] Verify Python bindings importable
+   - [ ] Compare old vs new generated code for compatibility
+
+**Deliverables:**
+- [ ] Working `make generate` command
+- [ ] Successfully regenerated Go bindings
+- [ ] Successfully regenerated Python bindings
+- [ ] Documentation of toolchain changes
+
+**Options for Resolution:**
+
+**Option A: Full Toolchain Fix** (Recommended for long-term)
+```bash
+cd sphere/
+
+# 1. Fix Dockerfile.gen (partially done)
+# Already updated: base image, Python version
+
+# 2. Fix go_package options
+sed -i 's/option go_package = "spherev1alpha";/option go_package = "github.com\/aunum\/sphere\/api\/gen\/go\/v1alpha;spherev1alpha";/' api/v1alpha/*.proto
+
+# 3. Add googleapis
+git submodule add https://github.com/googleapis/googleapis.git third_party/googleapis
+
+# 4. Update Makefile
+# Replace make generate with modern protoc commands
+
+# 5. Test
+make generate
+```
+
+**Option B: Manual Struct Updates** (Quick workaround)
+- Manually edit `api/gen/go/v1alpha/env.pb.go`
+- Add fields to ResetEnvResponse and StepEnvResponse structs
+- Update getter methods
+- Update fileDescriptor bytes (complex)
+- Risk: Easy to introduce bugs
+
+**Option C: Hybrid Approach**
+- Use local protoc directly (bypass Docker)
+- Install dependencies: protoc, protoc-gen-go, googleapis
+- Run generation manually
+- Document commands for future use
+
+**Testing:**
+```bash
+cd sphere/
+
+# Verify Docker build
+docker build -f Dockerfile.gen -t sphere-gen:latest .
+
+# Verify generation
+make generate
+
+# Verify Go compilation
+cd api/gen/go/v1alpha && go build .
+
+# Verify Python import
+python3 -c "from api.gen.python.v1alpha import env_pb2"
+```
+
+**Recommendation:** Option A (Full Fix) - most maintainable long-term.
 
 ---
 
 ### Phase 4: Gold Core Environment Wrapper
 **Duration:** 1 day  
-**Prerequisites:** Phase 3 complete
+**Prerequisites:** Phase 3.5 complete (bindings available)
 
 **Tasks:**
 1. Update `Outcome` struct
