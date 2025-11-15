@@ -5,8 +5,8 @@ import (
 	"github.com/aunum/gold/pkg/v1/common"
 	"github.com/aunum/gold/pkg/v1/common/require"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/gold/pkg/v1/track"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
@@ -98,7 +98,7 @@ func runTest(t *test) {
 
 			event := her.NewEvent(state, init.Goal, outcome)
 			episodeEvents = append(episodeEvents, event)
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				if outcome.Reward == 0 {
 					success.Set(1)
 				}

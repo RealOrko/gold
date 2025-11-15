@@ -41,7 +41,7 @@ func main() {
 
 			agent.Memory.Store(state, action, outcome.Reward)
 
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}

@@ -135,7 +135,7 @@ func (a *Agent) Learn() error {
 	batchQValues := []*tensor.Dense{}
 	for _, event := range batch {
 		qUpdate := float32(event.Reward)
-		if !event.Done {
+		if !event.Terminated {
 			prediction, err := a.TargetPolicy.Predict(event.Observation)
 			if err != nil {
 				return err

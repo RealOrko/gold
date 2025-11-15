@@ -24,7 +24,7 @@ func NewEvent(state, actionProbs, actionOneHot, qValue *tensor.Dense) *Event {
 
 // Apply an outcome to an event.
 func (e *Event) Apply(outcome *envv1.Outcome) {
-	mask := float32(num.BoolToInt(!outcome.Done))
+	mask := float32(num.BoolToInt(!outcome.Terminated))
 	e.Mask = tensor.New(tensor.WithBacking([]float32{mask}))
 	e.Reward = tensor.New(tensor.WithBacking([]float32{outcome.Reward}))
 }

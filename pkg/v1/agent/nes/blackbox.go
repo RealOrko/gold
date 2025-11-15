@@ -149,12 +149,12 @@ func (s *SphereBlackBox) Run(weights *tensor.Dense) (reward float32, err error) 
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				outcome.Reward = -outcome.Reward
 			}
 			score += outcome.Reward
 
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				break
 			}
 			state = outcome.Observation

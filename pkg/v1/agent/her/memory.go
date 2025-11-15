@@ -43,7 +43,8 @@ func (e *Event) Print() {
 	log.Infov("action", e.Outcome.Action)
 	log.Infov("reward", e.Outcome.Reward)
 	log.Infov("observation", e.Outcome.Observation.Data())
-	log.Infov("done", e.Outcome.Done)
+	log.Infov("terminated", e.Outcome.Terminated)
+	log.Infov("truncated", e.Outcome.Truncated)
 	log.Infov("index", e.i)
 	log.Break()
 }
@@ -55,7 +56,8 @@ func (e *Event) Copy() *Event {
 			Observation: e.Outcome.Observation.Clone().(*tensor.Dense),
 			Action:      e.Outcome.Action,
 			Reward:      e.Outcome.Reward,
-			Done:        e.Outcome.Done,
+			Terminated:  e.Outcome.Terminated,
+			Truncated:   e.Outcome.Truncated,
 		},
 		State: e.State.Clone().(*tensor.Dense),
 		Goal:  e.Goal.Clone().(*tensor.Dense),

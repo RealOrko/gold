@@ -6,8 +6,8 @@ import (
 	"math/rand"
 
 	"github.com/aunum/gold/pkg/v1/dense"
-	"github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/gold/pkg/v1/track"
+	"github.com/aunum/goro/pkg/v1/model"
 
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	"github.com/aunum/gold/pkg/v1/common"
@@ -138,7 +138,7 @@ func (a *Agent) Learn() error {
 	batchQValues := []*tensor.Dense{}
 	for _, event := range batch {
 		qUpdate := float32(event.Reward)
-		if !event.Done {
+		if !event.Terminated {
 			obvGoal, err := event.Observation.Concat(1, event.Goal)
 			if err != nil {
 				return err
@@ -250,7 +250,7 @@ func (a *Agent) Hindsight(episodeEvents Events) error {
 		event.Goal = finalEvent.Outcome.Observation
 		if i == len(altBatch)-1 {
 			event.Reward = a.successfulReward
-			event.Done = true
+			event.Terminated = true
 		}
 		a.memory.Remember(event)
 		err := a.Learn()

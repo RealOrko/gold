@@ -29,7 +29,7 @@ func TestLocal(t *testing.T) {
 			outcome, err := env.Step(action)
 			require.Nil(t, err)
 			fmt.Printf("outcome: \n%+v\n", outcome)
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				fmt.Printf("Episode finished after %d timesteps \n", ts+1)
 				break
 			}

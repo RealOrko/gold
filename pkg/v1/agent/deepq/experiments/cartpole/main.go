@@ -49,7 +49,7 @@ func main() {
 			err = agent.Learn()
 			require.NoError(err)
 
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}

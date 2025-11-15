@@ -35,7 +35,8 @@ func NewEvent(state *tensor.Dense, action int, outcome *envv1.Outcome) *Event {
 
 // Print the event.
 func (e *Event) Print() {
-	log.Infof("event --> \n state: %v \n action: %v \n reward: %v \n done: %v \n obv: %v\n\n", e.State, e.Action, e.Reward, e.Done, e.Observation)
+	log.Infof("event --> \n state: %v \n action: %v \n reward: %v \n terminated: %v \n truncated: %v \n obv: %v\n\n",
+		e.State, e.Action, e.Reward, e.Terminated, e.Truncated, e.Observation)
 }
 
 // Memory for the dqn agent.

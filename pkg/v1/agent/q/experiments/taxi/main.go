@@ -40,7 +40,7 @@ func main() {
 			err = agent.Learn(action, state, outcome)
 			require.NoError(err)
 
-			if outcome.Done {
+			if outcome.Terminated || outcome.Truncated {
 				log.Successf("Episode %d finished after %d timesteps with a score of %v", episode.I, timestep.I+1, score.Scalar())
 				break
 			}

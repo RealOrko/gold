@@ -15,6 +15,7 @@ import (
 	"github.com/aunum/gold/pkg/v1/common/num"
 
 	spherev1alpha "github.com/aunum/sphere/api/gen/go/v1alpha"
+	_struct "github.com/golang/protobuf/ptypes/struct"
 	"github.com/skratchdot/open-golang/open"
 	"gorgonia.org/tensor"
 )
@@ -136,8 +137,14 @@ type Outcome struct {
 	// Reward from action.
 	Reward float32
 
-	// Whether the environment is done.
-	Done bool
+	// Whether the episode terminated naturally (goal reached, failure, etc.)
+	Terminated bool
+
+	// Whether the episode was truncated by constraint (time limit, etc.)
+	Truncated bool
+
+	// Extra information from environment for debugging.
+	Info *_struct.Struct
 }
 
 // Step through the environment.
@@ -154,7 +161,14 @@ func (e *Env) Step(value int) (*Outcome, error) {
 			return nil, err
 		}
 	}
-	return &Outcome{observation, value, resp.Reward, resp.Done}, nil
+	return &Outcome{
+		Observation: observation,
+		Action:      value,
+		Reward:      resp.Reward,
+		Terminated:  resp.Terminated,
+		Truncated:   resp.Truncated,
+		Info:        resp.Info,
+	}, nil
 }
 
 // SampleAction returns a sample action for the environment.
@@ -185,6 +199,9 @@ type InitialState struct {
 
 	// Goal if present.
 	Goal *tensor.Dense
+
+	// Extra information from environment for debugging.
+	Info *_struct.Struct
 }
 
 // Reset the environment.
@@ -213,7 +230,11 @@ func (e *Env) Reset() (init *InitialState, err error) {
 			}
 		}
 	}
-	return &InitialState{Observation: observation, Goal: goal}, nil
+	return &InitialState{
+		Observation: observation,
+		Goal:        goal,
+		Info:        resp.Info,
+	}, nil
 }
 
 // Close the environment.
