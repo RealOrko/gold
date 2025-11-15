@@ -13,7 +13,9 @@
 		<img id="live" style="display:none" class="img-fluid"/>
 	</div>
 
-	<div class="d-flex justify-content-around flex-wrap" id="metrics">
+	<div class="container-fluid">
+		<div class="row" id="metrics">
+		</div>
 	</div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -61,6 +63,7 @@
 				},
 				options: {
 				responsive: true,
+				maintainAspectRatio: false,
 				title: {
 					display: true,
 					text: value,
@@ -126,12 +129,12 @@
 							console.log('adding value: ' + value)
 							var div = document.createElement("div");
 							div.id = value + 'Holder';
-							div.class = "p-2"
+							div.className = "p-2 col-lg-6 col-md-12";
+							div.style.maxWidth = "600px";
+							div.style.height = "300px";
 
 							var canvas = document.createElement('canvas');
 							canvas.id = value;
-							canvas.width = 400;
-							canvas.height = 400;
 
 							div.appendChild(canvas);
 

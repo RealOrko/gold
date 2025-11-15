@@ -68,10 +68,10 @@ func TestPolicy(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		j := float32(i)
 		state := tensor.New(tensor.WithShape(2, 4), tensor.WithBacking([]float32{j * .001, j * -.002, j * .003, j * -.004, j * .005, j * -.006, j * .007, j * -.008}))
-		
+
 		err = m.ResizeBatch(2)
 		require.NoError(t, err)
-		
+
 		_, err = m.PredictBatch(state)
 		require.NoError(t, err)
 		err = m.FitBatch(x, y)
@@ -87,10 +87,10 @@ func TestPolicy(t *testing.T) {
 
 	qvf2, err := m.Predict(x2)
 	require.NoError(t, err)
-	
+
 	err = m.ResizeBatch(2)
 	require.NoError(t, err)
-	
+
 	qvfb, err := m.PredictBatch(x)
 	require.NoError(t, err)
 	log.Info("----")
