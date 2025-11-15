@@ -67,18 +67,19 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 - [x] Verify generated code compiles
 
 ### Gold Core (Go)
-- [ ] Update `Outcome` struct
-- [ ] Update `InitialState` struct
-- [ ] Update `Step()` method
-- [ ] Update `Reset()` method
+- [ ] Update `Outcome` struct (BREAKING: remove Done, add Terminated/Truncated/Info)
+- [ ] Update `InitialState` struct (add Info field)
+- [ ] Update `Step()` method (return Terminated/Truncated from response)
+- [ ] Update `Reset()` method (return Info from response)
 
-### Agents (Go)
-- [ ] **DeepQ:** Fix bootstrapping logic
-- [ ] **PPO:** Fix mask calculation
-- [ ] **REINFORCE:** Update training loop
-- [ ] **NES:** Update training loop
-- [ ] **HER:** Update hindsight logic
-- [ ] **Q:** Update training loop
+### Agents (Go) - ALL MUST UPDATE SIMULTANEOUSLY
+- [ ] **DeepQ:** Fix bootstrapping logic (`!event.Done` → `!event.Terminated`)
+- [ ] **PPO:** Fix mask calculation (`!outcome.Done` → `!outcome.Terminated`)
+- [ ] **HER:** Fix hindsight logic (`event.Done = true` → `event.Terminated = true`)
+- [ ] **REINFORCE:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [ ] **NES:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [ ] **Q:** Update episode detection (`outcome.Done` → `outcome.Terminated || outcome.Truncated`)
+- [ ] **All Experiments:** Update loop termination (6 files total)
 
 ---
 
@@ -122,6 +123,7 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 | Backward Compatibility | ✓ Complete | Combined terminated\|truncated into done (Python) |
 | Proto Bindings Strategy | ✓ Complete | Toolchain fix successful (Phase 3.5) |
 | Toolchain Modernization | ✓ Complete | Golang 1.19, Debian Bullseye, Python 3, grpc-gateway v1.16 |
+| Gold API Strategy | ✓ Complete | Full Gymnasium alignment - remove Done, use Terminated/Truncated |
 
 ---
 
@@ -199,4 +201,84 @@ Quick reference for migration progress. See [GYMNASIUM_MIGRATION_PLAN.md](./GYMN
 
 ---
 
-*Last Updated: 2025-11-15*
+## Session 5 Summary (2025-11-15) - Phase 4 Planning
+
+### Code Analysis Completed
+- ✅ Analyzed all agent implementations for `Done` field usage
+- ✅ Identified critical RL semantic issues:
+  - **DeepQ bootstrapping** (agent.go:138): Uses `!event.Done` for Q-learning target calculation
+  - **PPO value mask** (memory.go:27): Uses `!outcome.Done` for value function continuity
+  - **HER hindsight** (agent.go:253): Manually sets `event.Done = true` for achieved goals
+- ✅ Found 18 references to `.Done` across 6 agents + experiments
+- ✅ Confirmed Event structs embed `*envv1.Outcome` (affects all agents)
+
+### Architecture Discovery
+**Event struct pattern (DeepQ, HER, PPO):**
+```go
+type Event struct {
+    *envv1.Outcome  // Embeds Done field
+    State *tensor.Dense
+    // ... other fields
+}
+```
+
+**Critical usage patterns:**
+1. **Bootstrapping** (DeepQ line 138, HER line 141): `if !event.Done` → Must become `!event.Terminated`
+2. **Value masks** (PPO line 27): `!outcome.Done` → Must become `!outcome.Terminated`
+3. **Episode detection** (all experiments): `if outcome.Done` → Must become `outcome.Terminated || outcome.Truncated`
+4. **Hindsight goals** (HER line 253): `event.Done = true` → Must become `event.Terminated = true`
+
+### Decision: Full Gymnasium Alignment
+**Rationale:**
+- Correct RL semantics require distinguishing termination types
+- Bootstrapping on truncated episodes is mathematically incorrect
+- No benefit to maintaining backward compatibility layer
+- Clean break better than technical debt
+
+**Breaking Changes:**
+- Remove `Done bool` from `Outcome` struct
+- Add `Terminated bool`, `Truncated bool`, `Info *_struct.Struct` to `Outcome`
+- Add `Info *_struct.Struct` to `InitialState`
+- All agents must update simultaneously
+
+### Impact Assessment
+| Component | Files | Critical Changes | Risk Level |
+|-----------|-------|------------------|------------|
+| Core Env | 1 | Outcome/InitialState structs + Step/Reset methods | HIGH |
+| DeepQ | 2 | Bootstrapping logic (`!Done` → `!Terminated`) | CRITICAL |
+| PPO | 2 | Mask calculation (`!Done` → `!Terminated`) | CRITICAL |
+| HER | 2 | Hindsight + bootstrapping | CRITICAL |
+| REINFORCE | 1 | Episode detection only | LOW |
+| NES | 1 | Episode detection only | LOW |
+| Q | 1 | Episode detection only | LOW |
+| Experiments | 6 | Loop termination | LOW |
+| **TOTAL** | **16** | **23 code locations** | **HIGH** |
+
+### Implementation Plan Approved
+**Phase 4: Core Wrapper (BREAKING)**
+1. Update `Outcome` struct: Remove `Done`, add `Terminated`/`Truncated`/`Info`
+2. Update `InitialState` struct: Add `Info`
+3. Update `Step()` method: Use `resp.Terminated`/`resp.Truncated`
+4. Update `Reset()` method: Use `resp.Info`
+
+**Phase 5: Agent Updates (MUST BE SIMULTANEOUS)**
+1. Fix experiments (episode detection): `Done` → `Terminated || Truncated`
+2. Fix REINFORCE/NES/Q (simple algorithms)
+3. Fix PPO (mask calculation): `!Done` → `!Terminated`
+4. Fix DeepQ (bootstrapping): `!Done` → `!Terminated`
+5. Fix HER (most complex): hindsight + bootstrapping
+
+**Phase 6: Testing**
+1. Unit tests for env package
+2. Integration tests with CartPole (DeepQ, PPO)
+3. Verify learning curves
+
+### Next Session Goals
+1. **Await approval to proceed with breaking changes**
+2. Update core `Outcome`/`InitialState` structs
+3. Update `Step()`/`Reset()` methods
+4. Begin agent updates (experiments first, then agents by complexity)
+
+---
+
+*Last Updated: 2025-11-15 (Session 5)*
