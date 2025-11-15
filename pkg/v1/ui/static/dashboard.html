@@ -4,13 +4,257 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<link rel="icon" href="https://avatars1.githubusercontent.com/u/17137938?s=400&v=4">
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+		<style>
+			:root {
+				--primary-color: #6366f1;
+				--primary-dark: #4f46e5;
+				--secondary-color: #10b981;
+				--accent-color: #f59e0b;
+				--danger-color: #ef4444;
+				--dark-bg: #0f172a;
+				--card-bg: #1e293b;
+				--text-primary: #f8fafc;
+				--text-secondary: #cbd5e1;
+				--border-color: #334155;
+				--gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				--gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+				--gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+			}
+			
+			* {
+				box-sizing: border-box;
+			}
+			
+			body {
+				font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+				background: var(--dark-bg);
+				color: var(--text-primary);
+				margin: 0;
+				padding: 0;
+				min-height: 100vh;
+				background-image: 
+					radial-gradient(circle at 25% 25%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+					radial-gradient(circle at 75% 75%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+			}
+			
+			.navbar-custom {
+				background: rgba(15, 23, 42, 0.95);
+				backdrop-filter: blur(10px);
+				border-bottom: 1px solid var(--border-color);
+				padding: 1rem 0;
+				box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+			}
+			
+			.navbar-brand {
+				font-weight: 600;
+				font-size: 1.5rem;
+				color: var(--text-primary) !important;
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+			}
+			
+			.navbar-brand::before {
+				content: "🤖";
+				font-size: 1.8rem;
+				animation: pulse 2s infinite;
+			}
+			
+			@keyframes pulse {
+				0%, 100% { transform: scale(1); }
+				50% { transform: scale(1.1); }
+			}
+			
+			.status-indicator {
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				background: var(--secondary-color);
+				border-radius: 50%;
+				margin-left: 8px;
+				animation: blink 2s infinite;
+			}
+			
+			@keyframes blink {
+				0%, 50% { opacity: 1; }
+				51%, 100% { opacity: 0.3; }
+			}
+			
+			.live-container {
+				margin: 2rem 0;
+				text-align: center;
+			}
+			
+			.live-frame {
+				border-radius: 16px;
+				box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+				border: 2px solid var(--border-color);
+				overflow: hidden;
+				display: inline-block;
+				background: var(--card-bg);
+			}
+			
+			.metrics-header {
+				text-align: center;
+				margin: 3rem 0 2rem;
+			}
+			
+			.metrics-title {
+				font-size: 2.5rem;
+				font-weight: 700;
+				background: var(--gradient-primary);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				margin-bottom: 0.5rem;
+			}
+			
+			.metrics-subtitle {
+				color: var(--text-secondary);
+				font-size: 1.1rem;
+				font-weight: 300;
+			}
+			
+			.chart-card {
+				background: var(--card-bg);
+				border-radius: 16px;
+				padding: 1.5rem;
+				margin-bottom: 2rem;
+				border: 1px solid var(--border-color);
+				box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+				transition: all 0.3s ease;
+				position: relative;
+				overflow: hidden;
+			}
+			
+			.chart-card::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: var(--gradient-primary);
+			}
+			
+			.chart-card:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+				border-color: var(--primary-color);
+			}
+			
+			.chart-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 1rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid var(--border-color);
+			}
+			
+			.chart-title {
+				font-size: 1.2rem;
+				font-weight: 600;
+				color: var(--text-primary);
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+			}
+			
+			.chart-title::before {
+				content: "📊";
+				font-size: 1.1rem;
+			}
+			
+			.chart-stats {
+				display: flex;
+				gap: 1rem;
+				font-size: 0.85rem;
+			}
+			
+			.stat-item {
+				display: flex;
+				align-items: center;
+				gap: 0.25rem;
+				color: var(--text-secondary);
+			}
+			
+			.stat-value {
+				color: var(--secondary-color);
+				font-weight: 600;
+			}
+			
+			.loading-spinner {
+				display: inline-block;
+				width: 20px;
+				height: 20px;
+				border: 2px solid var(--border-color);
+				border-radius: 50%;
+				border-top-color: var(--primary-color);
+				animation: spin 1s ease-in-out infinite;
+			}
+			
+			@keyframes spin {
+				to { transform: rotate(360deg); }
+			}
+			
+			.fade-in {
+				animation: fadeIn 0.6s ease-out forwards;
+			}
+			
+			@keyframes fadeIn {
+				from {
+					opacity: 0;
+					transform: translateY(20px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			
+			.container-fluid {
+				padding: 0 2rem;
+			}
+			
+			@media (max-width: 768px) {
+				.container-fluid {
+					padding: 0 1rem;
+				}
+				
+				.metrics-title {
+					font-size: 2rem;
+				}
+				
+				.chart-card {
+					padding: 1rem;
+				}
+			}
+		</style>
 	</head>
 	<body>
-	<ul class="nav">
-		<a class="navbar-brand" id="brand" href="#" style="padding-left: 20px;"></a>
-	</ul>
-	<div class="text-center">
-		<img id="live" style="display:none" class="img-fluid"/>
+	<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+		<div class="container-fluid">
+			<a class="navbar-brand" id="brand" href="#">
+				<span id="brand-text">AI Agent Dashboard</span>
+				<span class="status-indicator"></span>
+			</a>
+		</div>
+	</nav>
+
+	<div style="height: 80px;"></div> <!-- Spacer for fixed navbar -->
+
+	<div class="live-container">
+		<div class="live-frame">
+			<img id="live" style="display:none" class="img-fluid"/>
+		</div>
+	</div>
+
+	<div class="metrics-header">
+		<h1 class="metrics-title">Training Metrics</h1>
+		<p class="metrics-subtitle">Real-time performance analytics and learning progress</p>
 	</div>
 
 	<div class="container-fluid">
@@ -19,7 +263,7 @@
 	</div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 	</body>
 	<script>
@@ -28,10 +272,9 @@
 				url: "/info",
 				dataType: "json",
 				success: function(response) {
-					title = response.name + " Agent"
+					const title = response.name + " Agent Dashboard";
 					document.title = title;
-					var node = document.createTextNode(title);
-					document.getElementById("brand").appendChild(node);
+					document.getElementById("brand-text").textContent = response.name + " Agent";
 				}
 			});
 		};
@@ -48,46 +291,104 @@
 	</script>
 	<script>
 		window.localStorage.setItem('values', []);
+		
+		function updateChartStats(value, stats) {
+			const statsDiv = document.getElementById(value + 'Stats');
+			if (statsDiv) {
+				statsDiv.innerHTML = `
+					<div class="stat-item">
+						<i class="fas fa-chart-line"></i>
+						<span class="stat-value">${stats.latest}</span>
+					</div>
+					<div class="stat-item">
+						<i class="fas fa-arrow-up"></i>
+						<span class="stat-value">${stats.max}</span>
+					</div>
+					<div class="stat-item">
+						<i class="fas fa-calculator"></i>
+						<span class="stat-value">${stats.avg}</span>
+					</div>
+					<div class="stat-item">
+						<i class="fas fa-hashtag"></i>
+						<span class="stat-value">${stats.episodes}</span>
+					</div>
+				`;
+			}
+		}
+		
 		function buildChart(value) {
 			var ctx_live = document.getElementById(value);
 			var chart = new Chart(ctx_live, {
 				type: 'line',
 				data: {
-				labels: [],
 				datasets: [{
+					label: value,
 					data: [],
-					borderWidth: 1,
-					borderColor:'#00c0ef',
-					fill: false,
+					borderWidth: 3,
+					borderColor: '#6366f1',
+					backgroundColor: 'rgba(99, 102, 241, 0.1)',
+					fill: true,
+					pointBackgroundColor: '#6366f1',
+					pointBorderColor: '#ffffff',
+					pointBorderWidth: 2,
+					pointRadius: 4,
+					pointHoverRadius: 6,
+					tension: 0.4
 				}]
 				},
 				options: {
 				responsive: true,
 				maintainAspectRatio: false,
-				title: {
-					display: true,
-					text: value,
+				animation: {
+					duration: 1000
 				},
-				legend: {
-					display: false
+				plugins: {
+					legend: {
+						display: false
+					}
 				},
 				scales: {
-					yAxes: [{
-						type: 'linear',
-						ticks: {
-							beginAtZero: true,
-					}
-					}],
-					xAxes: [{
-						type: 'linear',
-						ticks: {
+					y: {
 						beginAtZero: true,
-						},
-						scaleLabel: {
+						title: {
 							display: true,
-							labelString: 'Episode'
+							text: 'Value'
+						},
+						grid: {
+							color: 'rgba(51, 65, 85, 0.5)',
+							drawBorder: false
+						},
+						ticks: {
+							color: '#cbd5e1',
+							font: {
+								family: 'Inter',
+								size: 12
+							}
 						}
-					}]
+					},
+					x: {
+						type: 'linear',
+						title: {
+							display: true,
+							text: 'Episode'
+						},
+						grid: {
+							color: 'rgba(51, 65, 85, 0.5)',
+							drawBorder: false
+						},
+						ticks: {
+							color: '#cbd5e1',
+							font: {
+								family: 'Inter',
+								size: 12
+							}
+						}
+					}
+				},
+				elements: {
+					point: {
+						hoverBackgroundColor: '#10b981'
+					}
 				}
 				}
 			});
@@ -96,10 +397,40 @@
 					url: "/api/values/"+value,
 					dataType: "json",
 					success: function(response) {
-						chart.data.datasets[0].data = response.xys;
-						chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
-
-						chart.update();
+						console.log('API Response for', value, ':', response);
+						// Handle the Chartjs API response structure
+						const chartData = response.xys || [];
+						console.log('Chart data points:', chartData);
+						
+						// Chart.js 3 handles {x,y} format natively
+						if (chartData && chartData.length > 0) {
+							chartData.sort((a, b) => a.x - b.x);
+						}
+						chart.data.datasets[0].data = chartData;
+						
+						// Update chart stats
+						if (chartData.length > 0) {
+							const values = chartData.map(d => d.y || 0);
+							console.log('Values for stats:', values);
+							const latest = values[values.length - 1];
+							const max = Math.max(...values);
+							const avg = values.reduce((a, b) => a + b, 0) / values.length;
+							
+							updateChartStats(value, {
+								latest: latest.toFixed(2),
+								max: max.toFixed(2),
+								avg: avg.toFixed(2),
+								episodes: chartData.length
+							});
+						} else {
+							console.log('No chart data available for', value);
+						}
+						
+						chart.update('none'); // No animation for updates
+					},
+					error: function(xhr, status, error) {
+						// Handle error gracefully
+						console.log('Failed to fetch data for ' + value + ':', error, xhr.responseText);
 					}
 				});
 			};
@@ -127,20 +458,47 @@
 						var body = document.getElementById("metrics");
 						for (value of newValues) {
 							console.log('adding value: ' + value)
-							var div = document.createElement("div");
-							div.id = value + 'Holder';
-							div.className = "p-2 col-lg-6 col-md-12";
-							div.style.maxWidth = "600px";
-							div.style.height = "300px";
+							
+							// Create column div
+							var colDiv = document.createElement("div");
+							colDiv.className = "col-lg-6 col-md-12 mb-4";
+							
+							// Create card div
+							var cardDiv = document.createElement("div");
+							cardDiv.className = "chart-card fade-in";
+							cardDiv.id = value + 'Holder';
+							
+							// Create header
+							var headerDiv = document.createElement("div");
+							headerDiv.className = "chart-header";
+							
+							var titleDiv = document.createElement("div");
+							titleDiv.className = "chart-title";
+							titleDiv.textContent = value;
+							
+							var statsDiv = document.createElement("div");
+							statsDiv.className = "chart-stats";
+							statsDiv.id = value + 'Stats';
+							statsDiv.innerHTML = '<div class="loading-spinner"></div>';
+							
+							headerDiv.appendChild(titleDiv);
+							headerDiv.appendChild(statsDiv);
+							
+							// Create chart container
+							var chartContainer = document.createElement("div");
+							chartContainer.style.height = "250px";
+							chartContainer.style.position = "relative";
 
 							var canvas = document.createElement('canvas');
 							canvas.id = value;
+							
+							chartContainer.appendChild(canvas);
+							cardDiv.appendChild(headerDiv);
+							cardDiv.appendChild(chartContainer);
+							colDiv.appendChild(cardDiv);
+							body.appendChild(colDiv);
 
-							div.appendChild(canvas);
-
-							body.appendChild(div);
-
-							buildChart(value)
+							buildChart(value);
 						};
 					};
 				}

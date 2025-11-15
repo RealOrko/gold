@@ -86,7 +86,8 @@ func (e *Episode) Data() *History {
 
 // Log values for an episode.
 func (e *Episode) Log() {
-	e.tracker.encoder.Encode(e.Data())
+	data := e.Data()
+	e.tracker.history = append(e.tracker.history, *data)
 }
 
 // Timestep represents a training timestep.
@@ -100,7 +101,8 @@ type Timesteps []*Timestep
 
 // Log values for a timestep.
 func (t *Timestep) Log() {
-	t.episode.tracker.encoder.Encode(t.Data())
+	data := t.Data()
+	t.episode.tracker.history = append(t.episode.tracker.history, *data)
 }
 
 // Data returns timestep data.

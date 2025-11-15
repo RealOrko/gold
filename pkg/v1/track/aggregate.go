@@ -96,8 +96,8 @@ func NewMeanAggregator(slicer Slicer) *MeanAggregator {
 func (m *MeanAggregator) Aggregate(vals Aggregables) *Aggregates {
 	sliced := m.Slice(vals)
 	aggs := NewAggregates(m.Label(), "value")
-	for i, slice := range sliced {
-		aggs.values = append(aggs.values, &AggregatedValue{value: mean(slice.Scalar()), episode: i})
+	for episodeNum, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: mean(slice.Scalar()), episode: episodeNum})
 	}
 	return aggs
 }
@@ -126,8 +126,8 @@ func NewMaxAggregator(slicer Slicer) *MaxAggregator {
 func (m *MaxAggregator) Aggregate(vals Aggregables) *Aggregates {
 	sliced := m.Slice(vals)
 	aggs := NewAggregates(m.Label(), "value")
-	for i, slice := range sliced {
-		aggs.values = append(aggs.values, &AggregatedValue{value: max(slice.Scalar()), episode: i})
+	for episodeNum, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: max(slice.Scalar()), episode: episodeNum})
 	}
 	return aggs
 }
@@ -157,8 +157,8 @@ func NewModeAggregator(slicer Slicer) *ModeAggregator {
 func (m *ModeAggregator) Aggregate(vals Aggregables) *Aggregates {
 	sliced := m.Slice(vals)
 	aggs := NewAggregates(m.Label(), "value")
-	for i, slice := range sliced {
-		aggs.values = append(aggs.values, &AggregatedValue{value: mode(slice.Scalar()), episode: i})
+	for episodeNum, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: mode(slice.Scalar()), episode: episodeNum})
 	}
 	return aggs
 }
@@ -293,9 +293,17 @@ func (a Aggregates) ChartjsXYs() ChartjsXYs {
 
 // Order the xys by x.
 func (c ChartjsXYs) Order() ChartjsXYs {
-	xys := make([]ChartjsXY, len(c))
-	for _, xy := range c {
-		xys[int(xy.X)] = xy
+	// Create a copy and sort by X value
+	xys := make(ChartjsXYs, len(c))
+	copy(xys, c)
+
+	// Sort by episode number (X value)
+	for i := 0; i < len(xys); i++ {
+		for j := i + 1; j < len(xys); j++ {
+			if xys[i].X > xys[j].X {
+				xys[i], xys[j] = xys[j], xys[i]
+			}
+		}
 	}
 	return xys
 }

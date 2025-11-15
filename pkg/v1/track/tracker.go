@@ -2,11 +2,7 @@
 package track
 
 import (
-	"bufio"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -20,10 +16,7 @@ type Tracker struct {
 	timestep int
 	episode  int
 
-	encoder  *json.Encoder
-	f        *os.File
-	scanner  *bufio.Scanner
-	filePath string
+	history []History
 
 	logger *log.Logger
 }
@@ -34,40 +27,17 @@ type TrackerOpt func(*Tracker)
 // NewTracker returns a new tracker for a graph.
 func NewTracker(opts ...TrackerOpt) (*Tracker, error) {
 	t := &Tracker{
-		values: map[string]TrackedValue{},
+		values:  map[string]TrackedValue{},
+		history: []History{},
 	}
 	for _, opt := range opts {
 		opt(t)
 	}
-	if t.f == nil {
-		f, err := ioutil.TempFile("", "stats.*.json")
-		if err != nil {
-			return nil, err
-		}
-		t.encoder = json.NewEncoder(f)
-		t.scanner = bufio.NewScanner(f)
-		t.filePath = f.Name()
-		t.f = f
-	}
 	if t.logger == nil {
 		t.logger = log.DefaultLogger
 	}
-	t.logger.Infof("tracking data in %s", t.f.Name())
+	t.logger.Info("tracking data in memory")
 	return t, nil
-}
-
-// WithDir is a tracker option to set the directory in which logs are stored.
-func WithDir(dir string) func(*Tracker) {
-	return func(t *Tracker) {
-		f, err := ioutil.TempFile(dir, "stats")
-		if err != nil {
-			t.logger.Fatal(err)
-		}
-		t.scanner = bufio.NewScanner(f)
-		t.encoder = json.NewEncoder(f)
-		t.filePath = f.Name()
-		t.f = f
-	}
 }
 
 // WithLogger adds a logger to the tracker.
@@ -182,16 +152,7 @@ func (t *Tracker) ZeroValue(name string) error {
 
 // Clear all tracked data.
 func (t *Tracker) Clear() error {
-	f, err := os.OpenFile(t.filePath, os.O_RDWR, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	err = f.Truncate(0)
-	if err != nil {
-		return err
-	}
-	f.Seek(0, 0)
+	t.history = []History{}
 	return nil
 }
 
@@ -223,25 +184,9 @@ func (t *Tracker) GetValue(name string) (TrackedValue, error) {
 // GetHistory gets all the history for a value.
 func (t *Tracker) GetHistory(name string) (HistoricalValues, error) {
 	history := HistoricalValues{}
-	f, err := os.Open(t.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-
-		var h History
-		err := json.Unmarshal(b, &h)
-		if err != nil {
-			return nil, err
-		}
+	for _, h := range t.history {
 		vh := h.Get(name)
 		history = append(history, vh...)
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
 	}
 	return history, nil
 }
@@ -285,7 +230,9 @@ func (t *Tracker) LogStep(episode, timestep int) error {
 
 // Write tracker data.
 func (t *Tracker) Write() error {
-	return t.encoder.Encode(t.Data())
+	data := t.Data()
+	t.history = append(t.history, *data)
+	return nil
 }
 
 // PrintHistoryAll prints the history of all values.
@@ -308,30 +255,14 @@ func (h HistoricalValues) Print() {
 // GetEpisodeHistories returns the episode history.
 func (t *Tracker) GetEpisodeHistories() (EpisodeHistories, error) {
 	epHistories := EpisodeHistories{}
-	f, err := os.Open(t.filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		b := scanner.Bytes()
-
-		var h History
-		err := json.Unmarshal(b, &h)
-		if err != nil {
-			return nil, err
-		}
-
+	for _, h := range t.history {
 		epHistory, ok := epHistories[h.Episode]
 		if !ok {
 			epHistory = Histories{}
 		}
-		epHistory = append(epHistory, &h)
+		hCopy := h
+		epHistory = append(epHistory, &hCopy)
 		epHistories[h.Episode] = epHistory
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
 	}
 	return epHistories, nil
 }

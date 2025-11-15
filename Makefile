@@ -3,4 +3,8 @@ static:
 	cd pkg/v1/ui && rice embed-go
 
 demo:
-	go run ./pkg/v1/agent/deepq/experiments/cartpole/main.go
+	go run ./pkg/v1/agent/deepq/experiments/cartpole/main.go &
+	sleep 5
+	firefox http://localhost:46211/api/values &
+	firefox http://localhost:46211/api/values/score &
+	firefox http://localhost:46211/api/aggregators &
