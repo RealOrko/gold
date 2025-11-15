@@ -18,6 +18,9 @@ type PolicyConfig struct {
 	// LayerBuilder is a builder of layer.
 	LayerBuilder LayerBuilder
 
+	// BatchSize of the updates.
+	BatchSize int
+
 	// Track is whether to track the model.
 	Track bool
 }
@@ -26,6 +29,7 @@ type PolicyConfig struct {
 var DefaultPolicyConfig = &PolicyConfig{
 	Optimizer:    g.NewAdamSolver(),
 	LayerBuilder: DefaultFCLayerBuilder,
+	BatchSize:    20,
 	Track:        true,
 }
 
@@ -62,6 +66,7 @@ func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (model
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(modelv1.CrossEntropy),
+		modelv1.WithBatchSize(config.BatchSize),
 		modelv1.WithMetrics(modelv1.TrainBatchLossMetric),
 	)
 	if config.Track {
